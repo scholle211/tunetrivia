@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { UserProfile, AccountTier } from '../types';
-import { getSpotifyProfile, logout } from '../services/spotify';
-import { generateCodeChallenge, generateRandomString } from '../services/pkce';
+import { getSpotifyProfile, getAccessToken, logout } from '../services/spotify';
+import { initializeSpotifyPlayer } from '../services/spotifyPlayer';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -35,36 +35,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setIsLoading(true);
 
-        const code = new URLSearchParams(window.location.search).get('code');
-        if (code) {
-          const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
-          const redirectUri = 'https://tunetrivia.netlify.app';
-          const codeVerifier = localStorage.getItem('spotify_code_verifier');
-
-          const body = new URLSearchParams({
-            client_id: clientId,
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: redirectUri,
-            code_verifier: codeVerifier || '',
-          });
-
-          const response = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body,
-          });
-
-          const data = await response.json();
-
-          if (data.access_token) {
-            localStorage.setItem('spotify_token', data.access_token);
-            // Clean the URL
-            window.history.replaceState({}, document.title, '/');
-          } else {
-            throw new Error(data.error_description || 'Token exchange failed');
+        const hash = window.location.hash;
+        if (hash) {
+          const token = hash.substring(1).split('&').find(elem => elem.startsWith('access_token'))?.split('=')[1];
+          if (token) {
+            localStorage.setItem('spotify_token', token);
+            window.location.hash = '';
           }
         }
 
@@ -74,6 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(profile);
           setAccountTier(profile.product === 'premium' ? 'premium' : 'normal');
           setIsAuthenticated(true);
+
+          if (profile.product === 'premium') {
+            await initializeSpotifyPlayer(token);
+          }
         }
       } catch (err) {
         console.error('Authentication error:', err);
@@ -87,23 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
     const redirectUri = 'https://tunetrivia.netlify.app';
-    const codeVerifier = generateRandomString(128);
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-    localStorage.setItem('spotify_code_verifier', codeVerifier);
+    const scopes = encodeURIComponent('user-read-private user-read-email playlist-read-private playlist-read-collaborative streaming user-modify-playback-state user-read-playback-state');
 
-    const scopes = 'user-read-private user-read-email playlist-read-private playlist-read-collaborative';
-
-    const url = `https://accounts.spotify.com/authorize?` +
-      `client_id=${clientId}` +
-      `&response_type=code` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=${encodeURIComponent(scopes)}` +
-      `&code_challenge_method=S256` +
-      `&code_challenge=${codeChallenge}`;
-
+    const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&show_dialog=true`;
     window.location.href = url;
   };
 
