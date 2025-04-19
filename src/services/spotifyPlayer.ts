@@ -5,6 +5,7 @@ declare global {
   }
 }
 
+// Dynamically load the Spotify Web Playback SDK
 export const loadSpotifySDK = (): Promise<void> => {
   return new Promise((resolve) => {
     if (document.getElementById('spotify-sdk')) {
@@ -20,10 +21,12 @@ export const loadSpotifySDK = (): Promise<void> => {
   });
 };
 
+// Initialize the Spotify Web Playback SDK and connect the player
 export const initializeSpotifyPlayer = async (token: string): Promise<string> => {
   await loadSpotifySDK();
 
   return new Promise((resolve) => {
+    // Define this BEFORE the SDK loads
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
         name: 'Tune Trivia Player',
@@ -50,14 +53,14 @@ export const initializeSpotifyPlayer = async (token: string): Promise<string> =>
         console.log('Player state changed:', state);
       });
 
-      // Ready
+      // Player ready
       player.addListener('ready', ({ device_id }: { device_id: string }) => {
         console.log('Ready with Device ID', device_id);
-        localStorage.setItem('spotify_device_id', device_id); // Save for later
+        localStorage.setItem('spotify_device_id', device_id);
         resolve(device_id);
       });
 
-      // Not Ready
+      // Player goes offline
       player.addListener('not_ready', ({ device_id }: { device_id: string }) => {
         console.log('Device ID has gone offline', device_id);
       });
@@ -67,6 +70,7 @@ export const initializeSpotifyPlayer = async (token: string): Promise<string> =>
   });
 };
 
+// Play a track using the Web API
 export const playTrack = async (trackUri: string) => {
   const token = localStorage.getItem('spotify_token');
   const deviceId = localStorage.getItem('spotify_device_id');
