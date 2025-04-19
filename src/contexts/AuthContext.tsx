@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { UserProfile, AccountTier } from '../types';
 import { getSpotifyProfile, logout } from '../services/spotify';
