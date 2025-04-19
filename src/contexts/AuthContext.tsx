@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleLogin = () => {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
-    const redirectUri = 'http://localhost:5173'; // ← or your deployed domain
+    const redirectUri = window.location.origin;
     const scopes = encodeURIComponent(
       'user-read-private user-read-email playlist-read-private playlist-read-collaborative streaming user-modify-playback-state user-read-playback-state'
     );
