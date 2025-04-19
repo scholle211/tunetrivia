@@ -54,9 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (profile.product === 'premium') {
             try {
               await initializeSpotifyPlayer(token);
-              console.log("Spotify player initialized");
-            } catch (err) {
-              console.warn("Failed to initialize Spotify Player", err);
+              console.log('Spotify player initialized');
+            } catch (e) {
+              console.warn('Failed to initialize Spotify player:', e);
             }
           }
         }
@@ -74,12 +74,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleLogin = () => {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
-    const redirectUri = 'https://tunetrivia.netlify.app';
+    const redirectUri = 'http://localhost:5173'; // ← or your deployed domain
     const scopes = encodeURIComponent(
       'user-read-private user-read-email playlist-read-private playlist-read-collaborative streaming user-modify-playback-state user-read-playback-state'
     );
 
-    const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&show_dialog=true`;
+    const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&scope=${scopes}&show_dialog=true`;
+
     window.location.href = url;
   };
 
