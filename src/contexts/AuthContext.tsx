@@ -79,11 +79,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const scopes = encodeURIComponent(
       'user-read-private user-read-email playlist-read-private playlist-read-collaborative streaming user-modify-playback-state user-read-playback-state'
     );
-
+  
     const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(
       redirectUri
     )}&scope=${scopes}&show_dialog=true`;
-
+  
     window.location.href = url;
   };
 

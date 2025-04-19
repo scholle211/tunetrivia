@@ -16,23 +16,14 @@ export interface GameConfig {
 
 // Song type from Spotify API
 export interface SpotifySong {
-  id: string;
   name: string;
-  artists: {
-    id: string;
-    name: string;
-  }[];
+  uri: string; // ✅ add this line
+  artists: { name: string }[];
   album: {
-    id: string;
     name: string;
-    images: {
-      url: string;
-      height: number;
-      width: number;
-    }[];
     release_date: string;
+    images: { url: string }[];
   };
-  preview_url: string | null;
 }
 
 // Playlist type from Spotify API
