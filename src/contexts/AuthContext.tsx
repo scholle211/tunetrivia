@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { UserProfile, AccountTier } from '../types';
-import { getSpotifyProfile, getAccessToken, logout } from '../services/spotify';
+import { getSpotifyProfile, logout } from '../services/spotify';
 import { initializeSpotifyPlayer } from '../services/spotifyPlayer';
 
 interface AuthContextType {
@@ -52,7 +52,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAuthenticated(true);
 
           if (profile.product === 'premium') {
-            await initializeSpotifyPlayer(token);
+            try {
+              await initializeSpotifyPlayer(token);
+              console.log("Spotify player initialized");
+            } catch (err) {
+              console.warn("Failed to initialize Spotify Player", err);
+            }
           }
         }
       } catch (err) {
@@ -70,7 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleLogin = () => {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
     const redirectUri = 'https://tunetrivia.netlify.app';
-    const scopes = encodeURIComponent('user-read-private user-read-email playlist-read-private playlist-read-collaborative streaming user-modify-playback-state user-read-playback-state');
+    const scopes = encodeURIComponent(
+      'user-read-private user-read-email playlist-read-private playlist-read-collaborative streaming user-modify-playback-state user-read-playback-state'
+    );
 
     const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&show_dialog=true`;
     window.location.href = url;

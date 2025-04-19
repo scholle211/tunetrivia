@@ -1,3 +1,5 @@
+// spotifyPlayer.ts
+
 declare global {
     interface Window {
       onSpotifyWebPlaybackSDKReady: () => void;
@@ -5,28 +7,41 @@ declare global {
     }
   }
   
-  export const initializeSpotifyPlayer = (token: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
+  let sdkReady = false;
+  
+  export const waitForSpotifySDK = (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (sdkReady) return resolve();
+  
       window.onSpotifyWebPlaybackSDKReady = () => {
-        const player = new window.Spotify.Player({
-          name: 'TuneTrivia Player',
-          getOAuthToken: (cb: (token: string) => void) => cb(token),
-          volume: 0.8,
-        });
-  
-        player.addListener('ready', ({ device_id }: any) => {
-          console.log('Spotify Player Ready with Device ID:', device_id);
-          localStorage.setItem('spotify_device_id', device_id);
-          resolve(device_id);
-        });
-  
-        player.addListener('initialization_error', ({ message }: any) => reject(message));
-        player.addListener('authentication_error', ({ message }: any) => reject(message));
-        player.addListener('account_error', ({ message }: any) => reject(message));
-        player.addListener('playback_error', ({ message }: any) => reject(message));
-  
-        player.connect();
+        sdkReady = true;
+        resolve();
       };
+    });
+  };
+  
+  export const initializeSpotifyPlayer = async (token: string): Promise<string> => {
+    await waitForSpotifySDK();
+  
+    return new Promise((resolve, reject) => {
+      const player = new window.Spotify.Player({
+        name: 'TuneTrivia Player',
+        getOAuthToken: (cb: (token: string) => void) => cb(token),
+        volume: 0.8,
+      });
+  
+      player.addListener('ready', ({ device_id }: any) => {
+        console.log('Spotify Player Ready with Device ID:', device_id);
+        localStorage.setItem('spotify_device_id', device_id);
+        resolve(device_id);
+      });
+  
+      player.addListener('initialization_error', ({ message }: any) => reject(message));
+      player.addListener('authentication_error', ({ message }: any) => reject(message));
+      player.addListener('account_error', ({ message }: any) => reject(message));
+      player.addListener('playback_error', ({ message }: any) => reject(message));
+  
+      player.connect();
     });
   };
   
