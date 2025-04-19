@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Volume2, Music } from 'lucide-react';
+import { Play, Pause, Music } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { getRandomSongsFromPlaylist } from '../../services/spotify';
 import { playTrack } from '../../services/spotifyPlayer';
@@ -9,12 +10,10 @@ import { SpotifySong } from '../../types';
 const Gameplay: React.FC = () => {
   const navigate = useNavigate();
   const { state, dispatch } = useGame();
-  const [songs, setSongs] = useState<SpotifySong[]>([]);
-  const [loading, setLoading] = useState(true);
   const [timer, setTimer] = useState(state.config.timePerGuess);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSongs = async () => {
@@ -25,13 +24,10 @@ const Gameplay: React.FC = () => {
         }
 
         const data = await getRandomSongsFromPlaylist(state.config.playlistId, state.config.rounds);
-        setSongs(data);
         dispatch({ type: 'SET_CURRENT_SONG', payload: data[0] });
       } catch (err) {
         console.error(err);
         setError('Failed to load songs. Try a different playlist.');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -66,6 +62,8 @@ const Gameplay: React.FC = () => {
   };
 
   const handlePlayPause = async () => {
+    if (!state.currentSong) return;
+
     if (state.isPlaying) {
       await pauseTrack();
       setTimerRunning(false);
@@ -79,19 +77,6 @@ const Gameplay: React.FC = () => {
   const getReleaseYear = (dateString: string) => {
     return dateString ? dateString.split('-')[0] : 'Unknown';
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4">
-            <div className="animate-spin h-12 w-12 border-4 border-[#1DB954] border-t-transparent rounded-full mx-auto"></div>
-          </div>
-          <p className="text-xl">Loading songs...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -110,6 +95,8 @@ const Gameplay: React.FC = () => {
     );
   }
 
+  if (!state.currentSong) return null;
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-3xl mx-auto">
@@ -126,7 +113,7 @@ const Gameplay: React.FC = () => {
 
         <div className="bg-gray-900 rounded-lg p-6 flex flex-col items-center">
           <div className="w-64 h-64 mb-4 flex items-center justify-center bg-gray-800 rounded-lg">
-            {state.currentSong?.album?.images[0]?.url ? (
+            {state.currentSong.album?.images[0]?.url ? (
               <img src={state.currentSong.album.images[0].url} alt="Album Cover" className="rounded-lg" />
             ) : (
               <Music size={64} className="text-gray-600" />
@@ -146,7 +133,7 @@ const Gameplay: React.FC = () => {
             {state.isPlaying ? 'Pause Track' : 'Play Track'}
           </button>
 
-          {showAnswer && state.currentSong && (
+          {showAnswer && (
             <div className="text-center mt-6 animate-fadeIn">
               <h2 className="text-xl font-bold mb-1">{state.currentSong.name}</h2>
               <p className="text-gray-400 mb-1">
