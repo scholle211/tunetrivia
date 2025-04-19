@@ -6,7 +6,7 @@ export const getAccessToken = (): string | null => {
 };
 
 // Basic fetch with authorization
-const fetchFromSpotify = async (endpoint: string, options = {}) => {
+const fetchFromSpotify = async (endpoint: string, options: { headers?: Record<string, string> } = {}) => {
   const token = getAccessToken();
   if (!token) {
     throw new Error('No access token available');
@@ -23,7 +23,6 @@ const fetchFromSpotify = async (endpoint: string, options = {}) => {
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Token expired, clear it
       logout();
       throw new Error('Session expired. Please log in again.');
     }
@@ -57,31 +56,29 @@ export const searchPlaylists = async (query: string): Promise<SpotifyPlaylist[]>
   return response.playlists.items;
 };
 
-// Get tracks from a playlist
+// ✅ Get all tracks from a playlist — allow full songs
 export const getPlaylistTracks = async (playlistId: string): Promise<SpotifySong[]> => {
   const response = await fetchFromSpotify(`/playlists/${playlistId}/tracks?limit=100`);
-  
-  // Filter out tracks without preview URLs
+
   return response.items
-    .map(item => item.track)
-    .filter(track => track && track.preview_url);
+    .map((item: any) => item.track)
+    .filter((track: any) => track && track.id && track.uri); // Keep valid tracks
 };
 
-// Get random songs from a playlist
+// ✅ Get random songs from a playlist (no preview restriction)
 export const getRandomSongsFromPlaylist = async (playlistId: string, count: number): Promise<SpotifySong[]> => {
   const allTracks = await getPlaylistTracks(playlistId);
-  const tracksWithPreview = allTracks.filter(track => track.preview_url);
-  
-  if (tracksWithPreview.length === 0) {
-    throw new Error('No playable tracks found in this playlist');
+
+  if (allTracks.length === 0) {
+    throw new Error('No tracks found in this playlist');
   }
-  
-  // Shuffle array and take the requested number of songs
-  const shuffled = [...tracksWithPreview].sort(() => 0.5 - Math.random());
+
+  const shuffled = [...allTracks].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, Math.min(count, shuffled.length));
 };
 
 // Logout and clear session
 export const logout = (): void => {
   localStorage.removeItem('spotify_token');
+  localStorage.removeItem('spotify_device_id');
 };
