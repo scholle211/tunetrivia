@@ -3,7 +3,7 @@ export interface Player {
   id: string;
   name: string;
   avatar?: string;
-  score: number;
+  points: number;
 }
 
 // Game Configuration
