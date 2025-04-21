@@ -59,6 +59,9 @@ export const initializeSpotifyPlayer = async (token: string): Promise<string> =>
     player.addListener('ready', ({ device_id }: { device_id: string }) => {
       console.log('Ready with Device ID', device_id);
       localStorage.setItem('spotify_device_id', device_id);
+      alert(
+        'Your Spotify Web Player is ready!\n\nMake sure to open Spotify on your phone or desktop and select "Tune Trivia Player" as your active device.'
+      );
       resolve(device_id);
     });
 
@@ -77,10 +80,11 @@ export const playTrack = async (trackUri: string) => {
 
   if (!token || !deviceId) {
     console.warn('Missing token or device ID');
+    alert('Spotify token or device ID missing. Please re-login and ensure Spotify is open.');
     return;
   }
 
-  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+  const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -91,4 +95,12 @@ export const playTrack = async (trackUri: string) => {
       position_ms: 0,
     }),
   });
+
+  if (!res.ok) {
+    const msg = await res.text();
+    console.error('Failed to start playback:', msg);
+    alert(
+      'Playback failed.\n\nMake sure you:\n- Have Spotify Premium\n- Have the Spotify app open\n- Selected "Tune Trivia Player" as the active device.'
+    );
+  }
 };
