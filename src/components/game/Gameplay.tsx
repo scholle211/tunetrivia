@@ -11,8 +11,8 @@ const Gameplay: React.FC = () => {
   const { state, dispatch } = useGame();
 
   const [allSongs, setAllSongs] = useState<SpotifySong[]>([]);
-  const [playerIndex, setPlayerIndex] = useState(0); // current player
-  const [roundIndex, setRoundIndex] = useState(1); // 1-based round counter
+  const [playerIndex, setPlayerIndex] = useState(0);
+  const [roundIndex, setRoundIndex] = useState(1);
 
   const [timer, setTimer] = useState(state.config.timePerGuess);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -215,11 +215,18 @@ const Gameplay: React.FC = () => {
             </>
           ) : (
             <>
-              <img
-                src={currentSong.album.images[0]?.url || ''}
-                alt="Album Cover"
-                className="w-64 h-64 rounded-lg mx-auto mb-4 object-cover"
-              />
+              {currentSong.album?.images[0]?.url ? (
+                <img
+                  src={currentSong.album.images[0].url}
+                  alt="Album Cover"
+                  className="w-64 h-64 rounded-lg mx-auto mb-4 object-cover"
+                />
+              ) : (
+                <div className="w-64 h-64 mx-auto mb-4 bg-gray-800 rounded-lg flex items-center justify-center">
+                  <Music size={64} className="text-gray-600" />
+                </div>
+              )}
+
               <h2 className="text-xl font-bold">{currentSong.name}</h2>
               <p className="text-gray-400">{currentSong.artists.map(a => a.name).join(', ')}</p>
               <p className="text-gray-500 text-sm">
