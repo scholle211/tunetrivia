@@ -26,7 +26,6 @@ const Gameplay: React.FC = () => {
   }>>({});
 
   const totalGuesses = state.config.rounds * state.players.length;
-
   const currentPlayer = state.players[playerIndex];
   const currentSongIndex = (roundIndex - 1) * state.players.length + playerIndex;
   const currentSong = allSongs[currentSongIndex];
@@ -187,17 +186,23 @@ const Gameplay: React.FC = () => {
         </h2>
 
         <div className="bg-gray-900 rounded-lg p-6 text-center">
+          <div className="w-64 h-64 mb-4 mx-auto bg-gray-800 rounded-lg flex items-center justify-center">
+            {showAnswer && currentSong.album?.images[0]?.url ? (
+              <img
+                src={currentSong.album.images[0].url}
+                alt="Album Cover"
+                className="w-full h-full object-cover rounded-lg"
+              />
+            ) : (
+              <Music size={64} className="text-gray-600" />
+            )}
+          </div>
+
           {!showAnswer ? (
             <>
-              <div className="w-64 h-64 mx-auto mb-4 bg-gray-800 rounded-lg flex items-center justify-center">
-                <Music size={64} className="text-gray-600" />
-              </div>
-
               <button
                 onClick={handlePlayPause}
-                className={`w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 px-6 rounded-full font-semibold transition-colors ${
-                  showReveal ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-[#1DB954] hover:bg-[#1ed760] text-black'
-                }`}
+                className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 px-6 rounded-full font-semibold transition-colors bg-[#1DB954] hover:bg-[#1ed760] text-black"
                 disabled={showReveal}
               >
                 {state.isPlaying ? <Pause size={20} /> : <Play size={20} />}
@@ -215,25 +220,13 @@ const Gameplay: React.FC = () => {
             </>
           ) : (
             <>
-              {currentSong.album?.images[0]?.url ? (
-                <img
-                  src={currentSong.album.images[0].url}
-                  alt="Album Cover"
-                  className="w-64 h-64 rounded-lg mx-auto mb-4 object-cover"
-                />
-              ) : (
-                <div className="w-64 h-64 mx-auto mb-4 bg-gray-800 rounded-lg flex items-center justify-center">
-                  <Music size={64} className="text-gray-600" />
-                </div>
-              )}
-
               <h2 className="text-xl font-bold">{currentSong.name}</h2>
               <p className="text-gray-400">{currentSong.artists.map(a => a.name).join(', ')}</p>
               <p className="text-gray-500 text-sm">
                 {currentSong.album.name} • {getReleaseYear(currentSong.album.release_date)}
               </p>
 
-              <div className="mt-6 flex justify-center gap-4">
+              <div className="mt-6 flex justify-center gap-4 flex-wrap">
                 {(['artist', 'title', 'year'] as const).map((key) => (
                   <button
                     key={key}
